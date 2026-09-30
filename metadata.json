@@ -1,0 +1,6 @@
+{
+  "name": "ResumeAI – AI Resume Analyzer & ATS Checker",
+  "description": "Analyze your resume with AI, check ATS compatibility, match resumes with job descriptions, and get actionable recommendations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

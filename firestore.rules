@@ -1,0 +1,100 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // User profiles
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId)
+        && request.resource.data.uid == userId
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 256;
+      allow update: if isOwner(userId)
+        && request.resource.data.uid == userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL', 'resumesCount']);
+      allow delete: if isOwner(userId);
+    }
+
+    // Resumes
+    match /resumes/{resumeId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn()
+        && isValidId(resumeId)
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.fileName is string
+        && request.resource.data.fileName.size() <= 256
+        && request.resource.data.status in ['uploaded', 'analyzed', 'failed'];
+      allow update: if isSignedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'latestAtsScore', 'latestJobMatchScore', 'rawText']);
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Analyses
+    match /analyses/{analysisId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn()
+        && isValidId(analysisId)
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.resumeId is string
+        && request.resource.data.atsScore is number;
+      allow update: if false; // Analyses are immutable snapshots
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Job Matches
+    match /jobMatches/{matchId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn()
+        && isValidId(matchId)
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.resumeId is string
+        && request.resource.data.matchScore is number;
+      allow update: if false; // Job matches are immutable records
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Feedback
+    match /feedback/{feedbackId} {
+      allow create: if isValidId(feedbackId)
+        && request.resource.data.rating is number
+        && request.resource.data.category is string
+        && request.resource.data.message is string
+        && request.resource.data.message.size() <= 2000;
+      allow read: if false;
+      allow update, delete: if false;
+    }
+
+    // Contact Messages
+    match /contactMessages/{messageId} {
+      allow create: if isValidId(messageId)
+        && request.resource.data.name is string
+        && request.resource.data.email is string
+        && request.resource.data.subject is string
+        && request.resource.data.message is string
+        && request.resource.data.message.size() <= 3000;
+      allow read: if false;
+      allow update, delete: if false;
+    }
+  }
+}

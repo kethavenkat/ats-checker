@@ -1,0 +1,139 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "format": "email", "maxLength": 256 },
+        "displayName": { "type": "string", "maxLength": 120 },
+        "photoURL": { "type": "string", "maxLength": 512 },
+        "createdAt": { "type": "string" },
+        "resumesCount": { "type": "number" }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "Resume": {
+      "title": "Resume",
+      "description": "User uploaded resume document record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "fileName": { "type": "string", "maxLength": 256 },
+        "fileSize": { "type": "number" },
+        "fileType": { "type": "string", "maxLength": 64 },
+        "fileUrl": { "type": "string", "maxLength": 1024 },
+        "rawText": { "type": "string", "maxLength": 50000 },
+        "uploadedAt": { "type": "string" },
+        "status": { "type": "string", "enum": ["uploaded", "analyzed", "failed"] },
+        "latestAtsScore": { "type": "number" },
+        "latestJobMatchScore": { "type": "number" }
+      },
+      "required": ["id", "userId", "fileName", "uploadedAt", "status"]
+    },
+    "Analysis": {
+      "title": "Analysis",
+      "description": "Detailed ATS score and resume content analysis",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "resumeId": { "type": "string", "maxLength": 128 },
+        "resumeName": { "type": "string", "maxLength": 256 },
+        "createdAt": { "type": "string" },
+        "atsScore": { "type": "number" },
+        "categoryScores": { "type": "object" },
+        "parsedProfile": { "type": "object" },
+        "atsChecks": { "type": "array" },
+        "strengths": { "type": "array" },
+        "weaknesses": { "type": "array" },
+        "missingInformation": { "type": "array" },
+        "recommendations": { "type": "array" },
+        "keywords": { "type": "object" }
+      },
+      "required": ["id", "userId", "resumeId", "createdAt", "atsScore"]
+    },
+    "JobMatch": {
+      "title": "JobMatch",
+      "description": "Resume comparison and matching with a job description",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "resumeId": { "type": "string", "maxLength": 128 },
+        "resumeName": { "type": "string", "maxLength": 256 },
+        "jobTitle": { "type": "string", "maxLength": 256 },
+        "company": { "type": "string", "maxLength": 256 },
+        "jobDescription": { "type": "string", "maxLength": 20000 },
+        "matchScore": { "type": "number" },
+        "categoryMatches": { "type": "object" },
+        "matchedSkills": { "type": "array" },
+        "missingSkills": { "type": "array" },
+        "partialMatches": { "type": "array" },
+        "matchedKeywords": { "type": "array" },
+        "missingKeywords": { "type": "array" },
+        "jobRequirements": { "type": "object" },
+        "tailoringRecommendations": { "type": "array" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "resumeId", "jobDescription", "matchScore", "createdAt"]
+    },
+    "Feedback": {
+      "title": "Feedback",
+      "description": "User product feedback",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "userEmail": { "type": "string", "format": "email", "maxLength": 256 },
+        "rating": { "type": "number" },
+        "category": { "type": "string", "maxLength": 64 },
+        "message": { "type": "string", "maxLength": 2000 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "rating", "category", "message", "createdAt"]
+    },
+    "ContactMessage": {
+      "title": "ContactMessage",
+      "description": "User inquiries sent through contact form",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 120 },
+        "email": { "type": "string", "format": "email", "maxLength": 256 },
+        "subject": { "type": "string", "maxLength": 200 },
+        "message": { "type": "string", "maxLength": 3000 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "subject", "message", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile data accessible only by the owner"
+    },
+    "/resumes/{resumeId}": {
+      "schema": "Resume",
+      "description": "User uploaded resumes accessible only by the owner"
+    },
+    "/analyses/{analysisId}": {
+      "schema": "Analysis",
+      "description": "Resume ATS analysis documents accessible only by the owner"
+    },
+    "/jobMatches/{matchId}": {
+      "schema": "JobMatch",
+      "description": "Job match documents accessible only by the owner"
+    },
+    "/feedback/{feedbackId}": {
+      "schema": "Feedback",
+      "description": "User feedback submissions"
+    },
+    "/contactMessages/{messageId}": {
+      "schema": "ContactMessage",
+      "description": "Contact form submissions"
+    }
+  }
+}
